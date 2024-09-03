@@ -6,6 +6,7 @@ import datetime as dt
 import tensorflow as tf
 import yfinance as yf
 import mplfinance as mpf
+import seaborn as sns
 
 import os 
 import time 
@@ -15,20 +16,33 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, LSTM, Bidirectional, InputLayer
 
+#TO DO:
+#Data Processing: Clean and preprocess the collected data. This may include handling missing values, 
+#normalizing data, and feature extraction to prepare the data for analysis. 
+#Data Analysis: Analyze the preprocessed data to uncover patterns and insights. 
+#Utilize statistical methods and visualizations to better understand the data 
+#and inform the selection of the machine learning model. 
+#Model Selection: Choose an appropriate machine learning model based on the data 
+#and the problem you are addressing. Consider models such as regression, classification, 
+#clustering, etc. 
+
+
 #------------------------------------------------------------------------------
 # parameters
 #------------------------------------------------------------------------------
 COMPANY = "Weather Prediction"
 TRAIN_START = '2008-12-01'
 TRAIN_END = '2010-12-01'
-FEATURES = ['Open', 'Close', 'Volume'] 
+FEATURES = ['Date','Location','MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','WindGustDir',
+            'WindGustSpeed','WindDir9am','WindDir3pm','WindSpeed9am','WindSpeed3pm','Humidity9am','Humidity3pm','Pressure9am','Pressure3pm','Cloud9am','Cloud3pm',
+            'Temp9am','Temp3pm','RainToday','RainTomorrow'] 
 NAN_STRATEGY = 'ffill'
 SPLIT_METHOD = 'ratio'
 TEST_SIZE = 0.2
 SPLIT_DATE = '2009-12-01'
 SCALE = 'False'
 FEATURE_RANGE=(0,1)
-FILE_PATH = './weatherAUS.csv' #to read the unprocesses data 
+FILE_PATH = 'data/weatherAUS.csv' #to read the unprocesses data 
 
 # save processes data file path
 date_now = time.strftime("%Y-%m-%d")
@@ -51,10 +65,9 @@ def load_and_process_dataset(start_date,end_date,features,nan_strategy = 'ffill'
     df = pd.read_csv('data/weatherAUS.csv')
 
     #this is to select the desired features of the data
-    data = data [features]
+    data = df [features]
 
     #handling the missing values in the data set 
-
     if nan_strategy =="ffill":
         data.fillna(method = 'ffill', inplace = True)
     
@@ -96,14 +109,18 @@ def load_and_process_dataset(start_date,end_date,features,nan_strategy = 'ffill'
     else:
         raise ValueError("Invalid split method. choose from 'ratio' or 'random'.")
     
+
     return train_data, test_data
-
 #------------------------------------------------------------------------------
-# Load Data
+# Data Analysis
 #------------------------------------------------------------------------------
+#data analysis
+pd.set_option('max_columns', 26)
+df = pd.read_csv('data/weatherAUS.csv')
+print("\n",df.head(10))#show 
+print(df.columns) #show what columns are there 
+df.info()         #show columns info
 
 
-
-#------------------------------------------------------------------------------
-# Prepare Data
-#------------------------------------------------------------------------------
+#graphs to use histogram, correlation Matrix, scatter plot graph, bar graph 
+# 
