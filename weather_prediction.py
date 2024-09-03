@@ -19,31 +19,36 @@ from tensorflow.keras.layers import Dense, Dropout, LSTM, Bidirectional, InputLa
 # parameters
 #------------------------------------------------------------------------------
 COMPANY = "Weather Prediction"
-ROWID_START = 1
-ROWID_END = 100
-FEATURES = []
-nan_strategy = 'ffill'
+TRAIN_START = '2008-12-01'
+TRAIN_END = '2010-12-01'
+FEATURES = ['Open', 'Close', 'Volume'] 
+NAN_STRATEGY = 'ffill'
 SPLIT_METHOD = 'ratio'
 TEST_SIZE = 0.2
-SCALE = 'True'
+SPLIT_DATE = '2009-12-01'
+SCALE = 'False'
 FEATURE_RANGE=(0,1)
-FILE_PATH = './Weather Training Data.csv'
+FILE_PATH = './weatherAUS.csv' #to read the unprocesses data 
 
 # save processes data file path
 date_now = time.strftime("%Y-%m-%d")
-data_filename = os.path.join("data",f"{COMPANY}_{date_now}.csv")
+data_filename = os.path.join("data",f"{COMPANY}_{date_now}.csv") #processed data
 file_name = f"{date_now}_{COMPANY}-{SCALE}"
 
 
 #------------------------------------------------------------------------------
 # load and process data function
 #------------------------------------------------------------------------------
-def load_and_process_dataset(rowID_start,rowID_end,features,nan_strategy = 'ffill',
+def load_and_process_dataset(start_date,end_date,features,nan_strategy = 'ffill',
                              file_path = None, split_method = "ratio", test_size=0.2,
-                             random_state=None, scale=False, feature_range=(0,1)):
+                             split_date=None,random_state=None, scale=False, feature_range=(0,1)):
     
+    #to ensure that the start date and end date are called as objects and not text 
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
     #load data from a file 
-    weather_data = pd.read_csv(FILE_PATH)
+    df = pd.read_csv('data/weatherAUS.csv')
 
     #this is to select the desired features of the data
     data = data [features]
@@ -51,8 +56,54 @@ def load_and_process_dataset(rowID_start,rowID_end,features,nan_strategy = 'ffil
     #handling the missing values in the data set 
 
     if nan_strategy =="ffill":
-        data.fillna
+        data.fillna(method = 'ffill', inplace = True)
+    
+    elif nan_strategy =="bfill":
+        data.fillna(method = 'bfill', inplace = True)
+
+    elif nan_strategy =="drop":
+        data.dropna(inplace = True)
+    else:
+        raise ValueError("Invalid NaN handling strategy. Choose from 'ffill', 'bfill', or 'drop'.")
+
+    #if a file path is provided save the data 
+    #this code takes the file and save it to the designated file path 
+    if file_path:
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        data.to_csv(file_path)
+
+    #initialize a dictionary to store the scalers if scaling is enabled 
+    column_scaler = {}
+
+    #what this function does is that its a loop that iterates each column that is 
+    # specified in the features list 
+    #is then creates a scaler for each feature a new MinMaxScaler is created. the feature_range will specifies
+    #the range to which the data is scaled to.
+    #the data is then reshaped into a 2D array with one column and multiple rows
+    #the fit transform is applied to the data which scales the data and replaces the original values in the dataset 
+    #The values is then sotred in the column_Scaler dictionary, this allows it to reverse the transformation later if needed
+    if scale:
+        for column in features:
+            scaler = MinMaxScaler(feature_range=feature_range)
+            data[column] = scaler.fit_transform(data[column].values.reshape(-1,1))
+            column_scaler[column] = scaler
+
+    #split the processed data into training and testing data sets.
+    if split_method == 'ratio':
+        train_data, test_data = train_test_split(data, test_size=test_size, shuffle=False)
+    elif split_method == 'random':
+        train_data, test_data = train_test_split(data, test_size=test_size, random_state=random_state)
+    else:
+        raise ValueError("Invalid split method. choose from 'ratio' or 'random'.")
+    
+    return train_data, test_data
+
+#------------------------------------------------------------------------------
+# Load Data
+#------------------------------------------------------------------------------
 
 
 
-    return 
+#------------------------------------------------------------------------------
+# Prepare Data
+#------------------------------------------------------------------------------
