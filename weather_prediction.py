@@ -19,7 +19,6 @@ from tensorflow.keras.layers import Dense, Dropout, LSTM, Bidirectional, InputLa
 
 
 #TO DO:
-
 #Data Analysis: Analyze the preprocessed data to uncover patterns and insights. 
 #Utilize statistical methods and visualizations to better understand the data 
 #and inform the selection of the machine learning model. 
@@ -37,7 +36,7 @@ COMPANY = "Weather Prediction"
 FILL_METHOD = 'ffill'
 SPLIT_METHOD = 'ratio'
 DROP_THRESHOLD = 0.7
-FEATURES = ['Location', 'MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','WindGustDir']
+FEATURES = ['Location', 'MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','RainToday','RainTomorrow']
 NORMALIZE_COLUMN = ['MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','WindGustDir',
             'WindGustSpeed','WindDir9am','WindDir3pm','WindSpeed9am','WindSpeed3pm','Humidity9am','Humidity3pm','Pressure9am','Pressure3pm','Cloud9am','Cloud3pm',
             'Temp9am','Temp3pm','RainToday','RainTomorrow']
@@ -115,12 +114,88 @@ processed_df = process_weather_data(file_path=FILE_PATH,fill_method=FILL_METHOD,
 
 #------------------------------------------------------------------------------
 # Data Analysis
+# print("\n",df.columns)                      #show what columns are there 
+# df.info()                                   #show columns info
 #------------------------------------------------------------------------------
-#data analysis
+print("\n")
+print(processed_df.head(10))
 
-print(processed_df.head(20))
+#------------------------------------------------------------------------------
+# Histogram function
+#------------------------------------------------------------------------------
+def plot_histogram(df, output_dir ='images', figsize=(12,18)):
 
-print("\n",df.columns)                      #show what columns are there 
-df.info()                                   #show columns info
+    #create the directory if it doesn't exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    #Get the continuous 
+    continuous_columns = [col for col in df.columns if df[col].dtype != object]
+
+    #set up the subplot grid 
+    fig, axes = plt.subplots(nrows = 3, ncols = 3, figsize=figsize)
+    axes = axes.reshape(-1)
+
+    #plot a histogram for each of the columns called 
+    for i , col in enumerate(continuous_columns):
+        sns.histplot(df[col], ax=axes[i], kde=True)
+        axes[i].set_title(f'Distribution of {col}')
+
+    #adjust layout and save the figure 
+    fig.tight_layout(pad=2.0)
+    plt.suptitle("Histogram of Columns", fontsize = 16, y =1.02)
+
+    #save the figure 
+    output_path = os.path.join(output_dir, 'histograms.png')
+    plt.savefig(output_path, facecolor='white',dpi=100)
+    plt.show()
+#------------------------------------------------------------------------------
+# Bar graph function function for rainy days
+#------------------------------------------------------------------------------
+def anayze_rainy_days_by_location(df, output_dir='images'):
+    #ensure the RainToday column is in binary format (1 for 'Yes', 0 for 'No')
+    df['RainToday'] = df['RainToday'].apply(lambda x: 1 if x== 'Yes' else 0)
+
+    #group by location an sum the rainToday column to get the number of rainy days per location 
+    df_rain_by_location = df.groupby(by='Location').sum()
+    df_rain_by_location = df_rain_by_location[['RainToday']]
+
+    #plotting the bar graph 
+    plt.figure(figsize=(8,12))
+    sns.barplot(x='RainToday', y=df_rain_by_location.index,
+                data=df_rain_by_location.sort_values('RainToday', ascending=False),
+                orient='h', palette='crest')
+    plt.xlabel('Number of Rainy Days')
+    plt.title('Rainy Days by Location')
+    plt.tight_layout()
+
+    #save the figure 
+    output_path = os.path.join(output_dir,'rainy_days_by_loc.png')
+    plt.savefig(output_path, facecolor='white', dpi=100)
+    plt.show()
+
+#------------------------------------------------------------------------------
+# Heatmap function
+#------------------------------------------------------------------------------
+def plot_heatmap(df, output_dir='images', figsize=(12,10)):
+
+    #calculate the correlation matrix 
+    corr_matrix = df.corr()
+
+    #plot the heatmap
+    plt.figure(figsize=figsize)
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', vmin=-1, vmax=1)
+    plt.title('Correlation Heatmap')
+
+    #save the figure 
+    output_path = os.path.join(output_dir, 'correlation_heatmap.png')
+    plt.savefig(output_path, facecolor='white', dpi=100)
+    plt.show()
 
 
+#------------------------------------------------------------------------------
+# Calling graph functions
+#------------------------------------------------------------------------------
+plot_histogram(processed_df)                    # calling Histogram graph.
+anayze_rainy_days_by_location(processed_df)     # calling graph for rainy days 
+plot_heatmap(processed_df)
