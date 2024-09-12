@@ -19,9 +19,6 @@ from tensorflow.keras.layers import Dense, Dropout, LSTM, Bidirectional, InputLa
 
 
 #TO DO:
-#Data Analysis: Analyze the preprocessed data to uncover patterns and insights. 
-#Utilize statistical methods and visualizations to better understand the data 
-#and inform the selection of the machine learning model. 
 #Model Selection: Choose an appropriate machine learning model based on the data 
 #and the problem you are addressing. Consider models such as regression, classification, 
 #clustering, etc. 
@@ -92,10 +89,10 @@ def process_weather_data(file_path,fill_method = 'ffill', drop_threshold = 0, no
     # Normalize specified numerical columns if provided
     if normalize_columns:
         # Filter only numerical columns for normalization
-        numeric_columns = df[normalize_columns].select_dtypes(include=[np.number]).columns.tolist()
+        numeric_columns = df.select_dtypes(include=[np.number]).columns.intersection(normalize_columns)
 
         # Normalize numerical columns
-        if numeric_columns:
+        if not numeric_columns.empty:
             scaler = MinMaxScaler()
             df[numeric_columns] = scaler.fit_transform(df[numeric_columns])
         else:
@@ -118,12 +115,13 @@ processed_df = process_weather_data(file_path=FILE_PATH,fill_method=FILL_METHOD,
 # df.info()                                   #show columns info
 #------------------------------------------------------------------------------
 print("\n")
+pd.set_option('display.max_columns', None)
 print(processed_df.head(10))
 
 #------------------------------------------------------------------------------
 # Histogram function
 #------------------------------------------------------------------------------
-def plot_histogram(df, output_dir ='images', figsize=(12,18)):
+def plot_histogram(df, output_dir ='Diagrams', figsize=(12,18)):
 
     #create the directory if it doesn't exist
     if not os.path.exists(output_dir):
@@ -152,7 +150,7 @@ def plot_histogram(df, output_dir ='images', figsize=(12,18)):
 #------------------------------------------------------------------------------
 # Bar graph function function for rainy days
 #------------------------------------------------------------------------------
-def anayze_rainy_days_by_location(df, output_dir='images'):
+def anayze_rainy_days_by_location(df, output_dir='Diagrams'):
     #ensure the RainToday column is in binary format (1 for 'Yes', 0 for 'No')
     df['RainToday'] = df['RainToday'].apply(lambda x: 1 if x== 'Yes' else 0)
 
@@ -177,20 +175,46 @@ def anayze_rainy_days_by_location(df, output_dir='images'):
 #------------------------------------------------------------------------------
 # Heatmap function
 #------------------------------------------------------------------------------
-def plot_heatmap(df, output_dir='images', figsize=(12,10)):
+def plot_heatmap(df, output_dir='Diagrams', figsize=(12,10), focus_cols=None):
+    if focus_cols:
+        df = df[focus_cols]
 
-    #calculate the correlation matrix 
     corr_matrix = df.corr()
 
-    #plot the heatmap
+    #plotting the heatmap
     plt.figure(figsize=figsize)
     sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', vmin=-1, vmax=1)
+    
+    #save heatmap diagram to the right path
     plt.title('Correlation Heatmap')
-
-    #save the figure 
     output_path = os.path.join(output_dir, 'correlation_heatmap.png')
     plt.savefig(output_path, facecolor='white', dpi=100)
     plt.show()
+
+#------------------------------------------------------------------------------
+# scatter plot diagram
+#------------------------------------------------------------------------------
+def scatter_plot(df,x_col,y_col ,output_dir='Diagrams', figsize=(8,6), hue=None):
+
+    #create directory if it doesn't exist 
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    #plotting scatter plot 
+    plt.figure(figsize=figsize)
+    sns.scatterplot(data=df, x=x_col, y=y_col,hue=hue, palette='viridis')
+    plt.title(f'Scatter Plot: {x_col} vs {y_col}', fontsize=14)
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
+    plt.tight_layout
+
+    #save scatter plot diagram to the right path
+    output_path=os.path.join(output_dir, f'Scatter_{x_col}_VS__{y_col}.png')
+    plt.savefig(output_path, facecolor='white', dpi=100)
+
+    #display the scatter plot graph
+    plt.show()
+
 
 
 #------------------------------------------------------------------------------
@@ -198,4 +222,13 @@ def plot_heatmap(df, output_dir='images', figsize=(12,10)):
 #------------------------------------------------------------------------------
 plot_histogram(processed_df)                    # calling Histogram graph.
 anayze_rainy_days_by_location(processed_df)     # calling graph for rainy days 
-plot_heatmap(processed_df)
+plot_heatmap(processed_df)                      # calling heat map graph for the functiong being called
+
+#calling scatter plot diagram 
+#X_col and y_col can be changed to any funtions 
+#example like x_col='Sunshine', y_col='Rainfall'
+
+#scatter plot for min temp and max temp
+scatter_plot(df=processed_df, x_col='MinTemp', y_col='MaxTemp')
+#scatter plot for rainfall vs evaporation          
+scatter_plot(df=processed_df, x_col='Rainfall', y_col='Evaporation')
