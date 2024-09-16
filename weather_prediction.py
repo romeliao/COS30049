@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd 
+import pandas as pd
 import pandas_datareader as web
 import datetime as dt
 import tensorflow as tf
@@ -8,13 +8,15 @@ import yfinance as yf
 import mplfinance as mpf
 import seaborn as sns
 
-import os 
-import time 
+import os
+import time
 
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, LSTM, Bidirectional, InputLayer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import plot_confusion_matrix, plot_roc_curve, classification_report
+
 
 
 #TO DO:
@@ -31,6 +33,7 @@ SPLIT_METHOD = 'ratio'          #this indicates that the dataset will be split i
 DROP_THRESHOLD = 0.7            #if the column is more than 70% missing value it will be dropped from the dataset 
 Output_DIagram = 'Diagrams'     #file to save diagrams to
 Bar_GraphFeature = 'RainToday'  # to choose what feature to show on the bar graph
+RegressionTarget = 'RainTomorrow'
 
 #Scatter plot variables 
 X_COL='MinTemp'
@@ -140,9 +143,87 @@ def process_weather_data(file_path,fill_method = 'ffill', drop_threshold = 0, no
 # the normalize argument is to ensure the columns are normalize 
 # the features will indicate which columns are being called
 #------------------------------------------------------------------------------
-processed_df = process_weather_data(file_path=FILE_PATH,fill_method=FILL_METHOD,
-    drop_threshold=DROP_THRESHOLD,normalize_columns=NORMALIZE_COLUMN,features=FEATURES
-)
+processed_df = process_weather_data(file_path=FILE_PATH, fill_method=FILL_METHOD, 
+                                    drop_threshold=DROP_THRESHOLD, 
+                                    normalize_columns=NORMALIZE_COLUMN, 
+                                    features=FEATURES)
+
+
+#------------------------------------------------------------------------------
+# preparing data for logistic regression model
+#------------------------------------------------------------------------------
+df_final = processed_df.copy()
+
+# Define X and y for machine learning
+# X will include all features except 'RainTomorrow', and y will be the 'RainTomorrow' column (target)
+X = df_final.drop(columns=RegressionTarget)
+y = df_final[RegressionTarget]
+
+
+X = X.select_dtypes(include=[np.number])
+
+y = df_final[RegressionTarget].map({'Yes': 1, 'No': 0})
+# Perform train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+# Output sizes of the split datasets
+print('\nTrain size:', X_train.shape[0])
+print('Test size: ', X_test.shape[0])
+
+# Initialize and train the Logistic Regression model
+logreg = LogisticRegression(random_state=42)
+logreg.fit(X_train, y_train)
+y_pred = logreg.predict(X_test)
+y_pred
+
+#------------------------------------------------------------------------------
+# logictic regression predictions
+#------------------------------------------------------------------------------
+def conf_matrix(model, X_test, y_test, cmap='Blues',output_dir =Output_DIagram):
+    plot_confusion_matrix(model,X_test,y_test, cmap=cmap)
+    plt.title(f'Confusion-Matrix:{RegressionTarget} ', fontsize=14)
+    plt.grid()
+    output_path = os.path.join(output_dir, 'Confusion_Matrix.png')
+    plt.savefig(output_path, facecolor='white', dpi=100)
+    plt.show()
+
+def roc_curve_custom(model,X_test, y_test,output_dir =Output_DIagram):
+    plot_roc_curve(model,X_test,y_test)
+    plt.title(f'ROC-Curve:{RegressionTarget} ', fontsize=14)
+    plt.plot([0,1], [0,1], color = 'black', linestyle='--')
+    output_path = os.path.join(output_dir, 'ROC_Curve.png')
+    plt.savefig(output_path, facecolor='white', dpi=100)
+    plt.show()
+
+def evaluate(model,X_train,X_test, y_train, y_test):
+    
+    #compute predictions 
+    y_pred = model.predict(X_test)
+
+    #confusion matrix 
+    print('Confusion Matrix')
+    print('-'*53)
+    conf_matrix(model,X_test, y_test)
+    print('\n')
+
+    #classification Report 
+    print('Classification Report') 
+    print('-'*53)
+    print(classification_report(y_test, y_pred))
+    print('\n')
+
+    # ROC Curve
+    print('ROC Curve')
+    print('-'*53)
+    roc_curve_custom(model, X_test, y_test)
+    print('\n')
+    
+    # Checking model fitness
+    print('Checking model fitness') 
+    print('-'*53)
+    print('Train score:', round(model.score(X_train, y_train), 4))
+    print('Test score: ', round(model.score(X_test, y_test), 4))
+    print('\n')
 
 #------------------------------------------------------------------------------
 # Data Analysis
@@ -341,7 +422,10 @@ def plot_boxplot(df, features, output_dir=Output_DIagram, figsize=(12,6)):
     plt.savefig(output_path, facecolor='white', dpi=100)
     plt.show()
 
-
+#------------------------------------------------------------------------------
+# Calling logistic regression model
+#------------------------------------------------------------------------------
+evaluate(logreg,X_train=X_train,X_test=X_test,y_train=y_train,y_test=y_test)
 
 #------------------------------------------------------------------------------
 # Calling graph functions
