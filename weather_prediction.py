@@ -13,13 +13,6 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA 
 
 
-
-#TO DO:
-#Model Selection: Choose an appropriate machine learning model based on the data 
-#and the problem you are addressing. Consider models such as regression, classification, 
-#clustering, etc. 
-
-
 #------------------------------------------------------------------------------
 # parameters
 #------------------------------------------------------------------------------
