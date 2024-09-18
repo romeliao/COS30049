@@ -1,21 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import pandas_datareader as web
-import datetime as dt
-import tensorflow as tf
-import yfinance as yf
-import mplfinance as mpf
 import seaborn as sns
 
 import os
-import time
 
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import plot_confusion_matrix, plot_roc_curve, classification_report
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA 
 
 
 
@@ -53,6 +48,10 @@ NORMALIZE_COLUMN = ['MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','Win
 #file path is to indicate where the dataset in being read from
 #the dataset will be stored in the variable df for further processing 
 FILE_PATH = df = pd.read_csv('data/weatherAUS.csv') 
+
+n_clusters = 3  # Choose the number of clusters
+
+
 
 #------------------------------------------------------------------------------
 # format lables in the dataset 
@@ -224,6 +223,36 @@ def evaluate(model,X_train,X_test, y_train, y_test):
     print('Train score:', round(model.score(X_train, y_train), 4))
     print('Test score: ', round(model.score(X_test, y_test), 4))
     print('\n')
+
+#------------------------------------------------------------------------------
+# Clustering: K-Means Model 
+#------------------------------------------------------------------------------
+def kmeans_clustering(X, n_clusters=n_clusters):
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    kmeans.fit(X)
+    return kmeans
+
+# Apply K-Means clustering on processed data
+
+kmeans_model = kmeans_clustering(X, n_clusters=n_clusters)
+
+#Add cluster lables to the dataframe 
+df_final['Cluster'] = kmeans_model.labels_
+
+#------------------------------------------------------------------------------
+# PCA for clustering visualization 
+#------------------------------------------------------------------------------
+def plot_clusters_pca(X, lables, n_clusters=n_clusters):
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X)
+
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue= lables, palette='viridis', legend='full')
+    plt.title(f'K-Means Clustering with {n_clusters} Clusters')
+    plt.show()
+
+#visualize clustering using PCA
+plot_clusters_pca(X, kmeans_model.labels_, n_clusters=n_clusters)
 
 #------------------------------------------------------------------------------
 # Data Analysis
@@ -443,4 +472,5 @@ scatter_plot(df=processed_df, x_col=X_COL, y_col=Y_COL)
 
 #calling box plot function 
 plot_boxplot(df=processed_df, features=FEATURES)
+
 
