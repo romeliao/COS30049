@@ -29,7 +29,7 @@ Y_COL='MaxTemp'
 
 #features that user wants to call and analyse 
 #this is to represent the specific columns from the dataset that will be extracted for analysis
-FEATURES = ['Date','Location', 'MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','RainToday','RainTomorrow']
+FEATURES = ['Date','Location', 'MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','RainToday','RainTomorrow','WindDir3pm','WindSpeed9am','WindSpeed3pm']
 
 #columns to normalize
 #this refers to the columns in the dataset that will be normalized and adjuust the values to a standard cale
@@ -42,7 +42,7 @@ NORMALIZE_COLUMN = ['MinTemp','MaxTemp','Rainfall','Evaporation','Sunshine','Win
 #the dataset will be stored in the variable df for further processing 
 FILE_PATH = df = pd.read_csv('data/weatherAUS.csv') 
 
-n_clusters = 3  # Choose the number of clusters
+n_clusters = 4  # Choose the number of clusters
 
 
 
@@ -244,9 +244,6 @@ def plot_clusters_pca(X, lables, n_clusters=n_clusters):
     plt.title(f'K-Means Clustering with {n_clusters} Clusters')
     plt.show()
 
-#visualize clustering using PCA
-plot_clusters_pca(X, kmeans_model.labels_, n_clusters=n_clusters)
-
 #------------------------------------------------------------------------------
 # Data Analysis
 # print("\n",df.columns)                      #show what columns are there 
@@ -300,7 +297,7 @@ def plot_histogram(df, output_dir =Output_DIagram, figsize=(12,18)):
     fig.tight_layout(pad=2.0)
     plt.suptitle("Histogram of Columns", fontsize = 16, y =1.02)
 
-    #save the figure 
+    #save the figure to the designated location
     output_path = os.path.join(output_dir, 'histograms.png')
     plt.savefig(output_path, facecolor='white',dpi=100)
     plt.show()
@@ -448,6 +445,12 @@ def plot_boxplot(df, features, output_dir=Output_DIagram, figsize=(12,6)):
 # Calling logistic regression model
 #------------------------------------------------------------------------------
 evaluate(logreg,X_train=X_train,X_test=X_test,y_train=y_train,y_test=y_test)
+
+#------------------------------------------------------------------------------
+# Calling clustering model
+#------------------------------------------------------------------------------
+#visualize clustering using PCA
+plot_clusters_pca(X, kmeans_model.labels_, n_clusters=n_clusters)
 
 #------------------------------------------------------------------------------
 # Calling graph functions
