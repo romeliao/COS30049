@@ -243,6 +243,8 @@ def plot_clusters_pca(X, lables, n_clusters=n_clusters):
     plt.figure(figsize=(8, 6))
     sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue= lables, palette='viridis', legend='full')
     plt.title(f'K-Means Clustering with {n_clusters} Clusters')
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
     plt.show()
 
 #------------------------------------------------------------------------------
