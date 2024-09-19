@@ -3,3 +3,4 @@ matplotlib version 3.3.4
 pandas version 1.2.1
 tensorflow version 2.4.1
 scikit-learn version 0.24.2
+python version 3.7.1

@@ -1,9 +1,10 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-import os
 
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
@@ -350,7 +351,7 @@ def Bar_Graph(df, output_dir=Output_DIagram):
 #figsize is the sige of the figure is set to 
 #focus_cols is an optional list of column to focus on if provided only these columns will be included in the heatmap 
 #------------------------------------------------------------------------------
-def plot_heatmap(df, output_dir=Output_DIagram, figsize=(12,10), focus_cols=None):
+def plot_heatmap(df, output_dir=Output_DIagram, figsize=(20,10), focus_cols=None):
     
     #this is used to provide the data fram and it is filtered to include only these 
     #columns. to allow the heatmap for a specific subset of columns to be generated
