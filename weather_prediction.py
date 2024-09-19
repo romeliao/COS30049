@@ -334,8 +334,12 @@ def Bar_Graph(df, output_dir=Output_DIagram):
     sns.barplot(x=Bar_GraphFeature, y=df_rain_by_location.index,
                 data=df_rain_by_location.sort_values(Bar_GraphFeature, 
                         ascending=False),orient='h', palette='crest')
-    plt.xlabel(f'Number of {Bar_GraphFeature}')
-    plt.title(f'{Bar_GraphFeature} by Location')
+    if Bar_GraphFeature == 'RainToday':
+        plt.xlabel(f'Number of rainy days')
+        plt.title(f'Rainy days by Location')
+    else:
+        plt.xlabel(f'Number of {Bar_GraphFeature}')
+        plt.title(f'{Bar_GraphFeature} by Location')
     plt.tight_layout()
 
     #save the figure
